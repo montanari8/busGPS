@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cliente WebSocket MQTT</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+
+<body>
+    <h1>Linha1 - Instância 4 Irmâos X Vila Mazzei:</h1>
+    <p id="latitude"></p>
+    <p id="longitude"></p>
+    <div id="mapa" style="height: 600px;"></div>
+
+    <script>
+        var ws = new WebSocket('ws://localhost:8080');
+
+        ws.onopen = function () {
+            console.log('Conectado ao servidor WebSocket.');
+        };
+
+
+  
+
+
+   
+
+        // Ícone de ônibus
+
+        var mapa = L.map('mapa').setView([0, 0], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contribuidores'
+        }).addTo(mapa);
+
+        // Criar um ícone personalizado
+        var iconeOnibus = L.icon({
+            //iconUrl: 'https://www.svgrepo.com/show/511568/bus-front-view-615.svg',
+            iconUrl: 'https://freesvg.org/img/3D-Isometric-Red-Bus.png',
+            iconSize: [70, 100], // Tamanho do ícone [largura, altura] em pixels
+            iconAnchor: [0, 0], // Ponto de ancoragem do ícone [x, y] em pixels
+            popupAnchor: [0, 0] // Ponto de popup do ícone [x, y] em pixels
+        });
+
+        // Adicionar o marcador com o ícone personalizado ao mapa
+        var marcador = L.marker([0, 0], { icon: iconeOnibus }).addTo(mapa);
+
+
+
+
+        /*
+        var mapa = L.map('mapa').setView([0, 0], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contribuidores'
+        }).addTo(mapa);
+        */
+
+        /*
+        var myIcon = L.icon({
+            iconUrl: 'https://www.svgrepo.com/show/425458/bus.svg',
+            iconSize: [50, 95],
+            iconAnchor: [22, 94],
+            popupAnchor: [-3, -76]
+        });
+
+        L.marker([-23.5625315, -48.0191984], { icon: myIcon }).addTo(mapa);
+        */
+
+
+        // var marcador = L.marker([0, 0]).addTo(mapa);
+
+
+        ws.onmessage = function (event) {
+            console.log('Mensagem recebida: ' + event.data);
+            var mensagem = JSON.parse(event.data);
+            if (mensagem.lon && mensagem.lat) {
+                var latitude = mensagem.lat;
+                var longitude = mensagem.lon;
+                document.getElementById('latitude').innerText = 'Latitude: ' + latitude;
+                document.getElementById('longitude').innerText = 'Longitude: ' + longitude;
+
+                // Atualizar a posição do marcador no mapa
+                marcador.setLatLng([latitude, longitude]).update();
+                mapa.setView([latitude, longitude], 20);
+            }
+        };
+
+        ws.onerror = function (event) {
+            console.error('Erro WebSocket: ', event);
+        };
+
+        ws.onclose = function (event) {
+            console.log('Conexão WebSocket fechada.');
+        };
+    </script>
+</body>
+
+</html>
